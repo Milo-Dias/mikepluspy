@@ -204,6 +204,26 @@ class Database:
                 f"Failed to close model database: {self._db_path}.\n{str(e)}"
             )
 
+    def begin_transaction(self):
+        """Begin the data transaction."""
+        if not self._is_open:
+            return
+
+        self._data_table_container.BeginTransaction()
+
+    def end_transaction(self, commit: bool):
+        """End the data transaction.
+
+        Parameters
+        ----------
+        commit : bool
+            true is to commit the data into database, false is to cancel the commit.
+        """
+        if not self._is_open:
+            return
+
+        self._data_table_container.EndTransaction(commit)
+
     def __enter__(self):
         """Context manager entry."""
         self.open()

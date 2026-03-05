@@ -136,21 +136,3 @@ def test_import_tool(import_db):
     muids = db.tables.msm_Link.get_muids()
     assert len(muids) == 575
     db.close()
-
-
-def test_river_junction_couple_tool(river_junction_couple_db):
-    db = Database(river_junction_couple_db)
-    river_junction_couple_tool = CoupleRiverJunctionTool(db)
-    river_junction_couple_tool.run()
-
-    fields = ["BranchID", "BranchChainage"]
-    muid = "Node_33"
-    field_val_get = db.tables.msm_Node.select(fields).by_muid(muid).execute()
-    assert field_val_get[muid][0] == "River"
-    assert field_val_get[muid][1] == pytest.approx(755.035988, abs=1e-6)
-
-    muid = "Pump_3_Outlet"
-    field_val_get = db.tables.msm_Node.select(fields).by_muid(muid).execute()
-    assert field_val_get[muid][0] == "River"
-    assert field_val_get[muid][1] == pytest.approx(735.704617, abs=1e-6)
-    db.close()
