@@ -9,7 +9,6 @@ from mikeplus.tools.interpolation_tool import InterpolationTool
 from mikeplus.tools.connection_repair_tool import ConnectionRepairTool
 from mikeplus.tools.catch_slope_length_process_tool import CathSlopeLengthProcess
 from mikeplus.tools.import_tool import ImportTool
-from mikeplus.tools.couple_river_junction_tool import CoupleRiverJunctionTool
 
 
 def test_topology_repair_tool(repair_tool_db):
