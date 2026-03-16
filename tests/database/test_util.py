@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 from mikeplus import Database
-from mikeplus.utilities.spatial_analysis_util import SpatialAnalysisUtil
+from mikeplus.utilities import get_nearest_river_chainage_at
 
 
 def test_get_nearest_river_chainage_at(river_junction_couple_db):
@@ -14,7 +14,7 @@ def test_get_nearest_river_chainage_at(river_junction_couple_db):
     x = field_val_get[muid][0]
     y = field_val_get[muid][1]
 
-    river_chainage = SpatialAnalysisUtil.get_nearest_river_chainage_at(db, x, y, 100.0)
+    river_chainage = get_nearest_river_chainage_at(db, x, y, 100.0)
     river = river_chainage[0]
     chainage = river_chainage[1]
     assert river == "River"

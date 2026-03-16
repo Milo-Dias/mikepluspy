@@ -205,22 +205,35 @@ class Database:
             )
 
     def begin_transaction(self):
-        """Begin the data transaction."""
+        """Begin the data transaction.
+
+        Using a BEGIN/END transaction significantly improves batch commit performance.
+
+        Examples
+        --------
+        >>> from mikeplus import Database
+        >>> db = Database("path/to/model.sqlite")
+        >>> db.begin_transaction()
+        >>> db._tables.msm_Node.update({"Diameter": 0.35}).by_muid("Node_1").execute()
+        >>> db._tables.msm_Node.update({"Diameter": 0.40}).by_muid("Node_2").execute()
+        >>> ... [Update more data]
+        >>> db.end_transaction(true)
+        """
         if not self._is_open:
-            return
+            raise ValueError("Database is not open")
 
         self._data_table_container.BeginTransaction()
 
-    def end_transaction(self, commit: bool):
+    def end_transaction(self, commit: bool = True):
         """End the data transaction.
 
         Parameters
         ----------
         commit : bool
-            true is to commit the data into database, false is to cancel the commit.
+            true is to commit the data into database, false is to rollback the commit.
         """
         if not self._is_open:
-            return
+            raise ValueError("Database is not open")
 
         self._data_table_container.EndTransaction(commit)
 
