@@ -214,10 +214,16 @@ class Database:
         >>> from mikeplus import Database
         >>> db = Database("path/to/model.sqlite")
         >>> db.begin_transaction()
-        >>> db._tables.msm_Node.update({"Diameter": 0.35}).by_muid("Node_1").execute()
-        >>> db._tables.msm_Node.update({"Diameter": 0.40}).by_muid("Node_2").execute()
-        >>> ... [Update more data]
-        >>> db.end_transaction(true)
+        >>> commit = True
+        >>> try:
+        >>>     db._tables.msm_Node.update({"Diameter": 0.35}).by_muid("Node_1").execute()
+        >>>     db._tables.msm_Node.update({"Diameter": 0.40}).by_muid("Node_2").execute()
+        >>>     ... [Update more data]
+        >>> except RuntimeError as e:
+        >>>     print(f"An error occurred: {e}")
+        >>>     commit = False
+        >>> finally:
+        >>>     db.end_transaction(commit)
         """
         if not self._is_open:
             raise ValueError("Database is not open")
