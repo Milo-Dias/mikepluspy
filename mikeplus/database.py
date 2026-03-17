@@ -204,6 +204,45 @@ class Database:
                 f"Failed to close model database: {self._db_path}.\n{str(e)}"
             )
 
+    def begin_transaction(self):
+        """Begin the data transaction.
+
+        Using a BEGIN/END transaction significantly improves batch commit performance.
+
+        Examples
+        --------
+        >>> from mikeplus import Database
+        >>> db = Database("path/to/model.sqlite")
+        >>> db.begin_transaction()
+        >>> commit = True
+        >>> try:
+        >>>     db._tables.msm_Node.update({"Diameter": 0.35}).by_muid("Node_1").execute()
+        >>>     db._tables.msm_Node.update({"Diameter": 0.40}).by_muid("Node_2").execute()
+        >>>     ... [Update more data]
+        >>> except RuntimeError as e:
+        >>>     print(f"An error occurred: {e}")
+        >>>     commit = False
+        >>> finally:
+        >>>     db.end_transaction(commit)
+        """
+        if not self._is_open:
+            raise ValueError("Database is not open")
+
+        self._data_table_container.BeginTransaction()
+
+    def end_transaction(self, commit: bool = True):
+        """End the data transaction.
+
+        Parameters
+        ----------
+        commit : bool
+            true is to commit the data into database, false is to rollback the commit.
+        """
+        if not self._is_open:
+            raise ValueError("Database is not open")
+
+        self._data_table_container.EndTransaction(commit)
+
     def __enter__(self):
         """Context manager entry."""
         self.open()
