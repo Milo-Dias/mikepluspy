@@ -1,0 +1,40 @@
+name: PR Checks
+
+# Lightweight checks that run on every PR (and pushes to main) without needing
+# the MIKE+ self-hosted runner: linting and type checking only, no tests. These
+# mirror the lint/typecheck jobs in python_publish.yml so PRs get the same
+# baseline coverage while MIKE+ CI/CD is being reworked.
+
+on:
+  workflow_dispatch:
+
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Run Ruff
+      uses: chartboost/ruff-action@v1
+      with:
+        src: "."  # Adjust the source directory as needed
+
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - name: Install test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e .[test]
+      - name: Run mypy
+        run: |
+          mypy mikeplus/

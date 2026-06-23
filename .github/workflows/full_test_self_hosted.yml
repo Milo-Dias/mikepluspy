@@ -3,10 +3,13 @@ name: Full Test (self-hosted)
 on:
   workflow_dispatch:
 
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+  # Disabled for now: the organization self-hosted runner this workflow's
+  # `test` job depends on was removed, and MIKE+ CI/CD is being reworked.
+  # Re-enable these triggers once a runner is available again.
+  # push:
+  #   branches: [ "main" ]
+  # pull_request:
+  #   branches: [ "main" ]
 
 jobs:
   lint:
@@ -40,7 +43,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.10", "3.13"]
+        python-version: ["3.10", "3.14"]
 
     steps:
       - uses: actions/checkout@v4
