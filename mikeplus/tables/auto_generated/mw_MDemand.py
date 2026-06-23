@@ -15,6 +15,8 @@ class mw_MDemandTableColumns(BaseColumns):
     """Pattern"""
     Enabled = "Enabled"
     """Is active"""
+    MeterID = "MeterID"
+    """Meter ID"""
     GenerateTypeNo = "GenerateTypeNo"
     """Mark"""
     DemCoeff = "DemCoeff"

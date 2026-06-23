@@ -19,6 +19,8 @@ class msm_HtmlSummaryTableColumns(BaseColumns):
     """Grid points, discharges"""
     SummaryLinkVelocityNo = "SummaryLinkVelocityNo"
     """Links, velocity"""
+    SummaryBoundaryConditionNo = "SummaryBoundaryConditionNo"
+    """Boundary conditions"""
     SummaryLinkInputNo = "SummaryLinkInputNo"
     """Link input"""
     NodeSelectionNo = "NodeSelectionNo"

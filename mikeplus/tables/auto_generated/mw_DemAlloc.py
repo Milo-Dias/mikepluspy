@@ -15,6 +15,8 @@ class mw_DemAllocTableColumns(BaseColumns):
     """Junction ID"""
     PipeID = "PipeID"
     """Pipe ID"""
+    MeterID = "MeterID"
+    """Meter ID"""
     Pattern = "Pattern"
     """Demand pattern"""
     Dem_category = "Dem_category"

@@ -18,6 +18,7 @@ from .m_GlobalParameter import m_GlobalParameterTable
 from .m_CustomUnit import m_CustomUnitTable
 from .m_CustomConfig import m_CustomConfigTable
 from .m_ChartBookmark import m_ChartBookmarkTable
+from .m_GenericSetting import m_GenericSettingTable
 from .ms_Tab import ms_TabTable
 from .ms_TabD import ms_TabDTable
 from .ms_2DTab import ms_2DTabTable
@@ -238,6 +239,7 @@ from .mw_AutocaliLeaks import mw_AutocaliLeaksTable
 from .mw_AutocaliTargets import mw_AutocaliTargetsTable
 from .mw_WDOAggSensors import mw_WDOAggSensorsTable
 from .mw_WDOAggSensorsD import mw_WDOAggSensorsDTable
+from .mw_WDOAmi import mw_WDOAmiTable
 from .mwRes_ValveCriticality import mwRes_ValveCriticalityTable
 from .mwRes_Sustainability_Node import mwRes_Sustainability_NodeTable
 from .mwRes_Sustainability_Link import mwRes_Sustainability_LinkTable
@@ -245,6 +247,7 @@ from .m21_pfsSection import m21_pfsSectionTable
 from .m21_pfsKeyword import m21_pfsKeywordTable
 from .m21_pfsParam import m21_pfsParamTable
 from .m2d_GlobalSetting import m2d_GlobalSettingTable
+from .m2d_BndGlobalSetting import m2d_BndGlobalSettingTable
 from .m2d_SurfaceRoughnessArea import m2d_SurfaceRoughnessAreaTable
 from .m2d_SurfaceRoughnessValue import m2d_SurfaceRoughnessValueTable
 from .m2d_EddyViscosityArea import m2d_EddyViscosityAreaTable
@@ -295,6 +298,7 @@ from .mss_Pump import mss_PumpTable
 from .mss_Outlet import mss_OutletTable
 from .mss_Street import mss_StreetTable
 from .mss_Inlet import mss_InletTable
+from .mss_InletConduitCon import mss_InletConduitConTable
 from .mss_Weir import mss_WeirTable
 from .mss_Tab import mss_TabTable
 from .mss_TabD import mss_TabDTable
@@ -352,6 +356,7 @@ __all__ = [
     "m_CustomUnitTable",
     "m_CustomConfigTable",
     "m_ChartBookmarkTable",
+    "m_GenericSettingTable",
     "ms_TabTable",
     "ms_TabDTable",
     "ms_2DTabTable",
@@ -572,6 +577,7 @@ __all__ = [
     "mw_AutocaliTargetsTable",
     "mw_WDOAggSensorsTable",
     "mw_WDOAggSensorsDTable",
+    "mw_WDOAmiTable",
     "mwRes_ValveCriticalityTable",
     "mwRes_Sustainability_NodeTable",
     "mwRes_Sustainability_LinkTable",
@@ -579,6 +585,7 @@ __all__ = [
     "m21_pfsKeywordTable",
     "m21_pfsParamTable",
     "m2d_GlobalSettingTable",
+    "m2d_BndGlobalSettingTable",
     "m2d_SurfaceRoughnessAreaTable",
     "m2d_SurfaceRoughnessValueTable",
     "m2d_EddyViscosityAreaTable",
@@ -629,6 +636,7 @@ __all__ = [
     "mss_OutletTable",
     "mss_StreetTable",
     "mss_InletTable",
+    "mss_InletConduitConTable",
     "mss_WeirTable",
     "mss_TabTable",
     "mss_TabDTable",

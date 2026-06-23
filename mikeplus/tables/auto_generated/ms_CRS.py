@@ -5,12 +5,12 @@ class ms_CRSTableColumns(BaseColumns):
     """Column names for ms_CRS (Generic shapes)."""
     MUID = "MUID"
     """ID"""
-    AllowRecalculation = "AllowRecalculation"
-    """AllowRecalculation"""
     TypeNo = "TypeNo"
     """Type"""
     Description = "Description"
     """Description"""
+    AllowRecalculation = "AllowRecalculation"
+    """Allow recalculation"""
 
 class ms_CRSTable(BaseTable):
     """Table for ms_CRS (Generic shapes)."""
