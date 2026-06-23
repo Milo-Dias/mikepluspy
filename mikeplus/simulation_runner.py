@@ -39,8 +39,7 @@ class SimulationRunner:
         >>> runner = SimulationRunner(db)
         """
         self._database = database
-        self._engine_tool = EngineTool()
-        self._engine_tool.DataTables = self._database._data_table_container
+        self._engine_tool = EngineTool(self._database._data_table_container)
 
     def run(
         self,
