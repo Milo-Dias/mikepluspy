@@ -22,6 +22,7 @@ sections:
   - m2d_ADPrecipitationArea
   - m2d_ADPrecipitationD
   - m2d_BndDistributedSource
+  - m2d_BndGlobalSetting
   - m2d_BndQHRelation
   - m2d_Boundary
   - m2d_Coupling
@@ -54,6 +55,7 @@ sections:
   - m_CustomConfig
   - m_CustomUnit
   - m_DefaultValue
+  - m_GenericSetting
   - m_GlobalParameter
   - m_Measurement
   - m_Media
@@ -240,6 +242,7 @@ sections:
   - mss_Inflow
   - mss_InflowD
   - mss_Inlet
+  - mss_InletConduitCon
   - mss_LIDControl
   - mss_LIDControlD
   - mss_LIDusage
@@ -322,6 +325,7 @@ sections:
   - mw_Valve
   - mw_WDOAggSensors
   - mw_WDOAggSensorsD
+  - mw_WDOAmi
   - mw_WDOComparisons
   - mw_WDOControls
   - mw_WDODemandPredictions
