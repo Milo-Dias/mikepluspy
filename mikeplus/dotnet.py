@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import clr  # noqa: F401
 import datetime
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 import pandas as pd
 
@@ -119,8 +119,11 @@ class DotNetConverter:
     @staticmethod
     def to_dotnet_dictionary(
         py_dict: Dict[str, Any],
-    ) -> Optional[Dictionary[String, Object]]:
+    ) -> Dictionary[String, Object]:
         """Convert a Python dictionary to a .NET Dictionary.
+
+        An empty/falsy ``py_dict`` yields an empty .NET Dictionary (not ``None``);
+        some MIKE+ 2026 U1 insert APIs NullReference on a ``null`` fields argument.
 
         Parameters
         ----------
@@ -129,14 +132,14 @@ class DotNetConverter:
 
         Returns
         -------
-        Dictionary[String, Object] or None
+        Dictionary[String, Object]
             .NET Dictionary with converted values
 
         """
-        if not py_dict:
-            return None
-
         net_dict = Dictionary[String, Object]()
+
+        if not py_dict:
+            return net_dict
 
         for key, value in py_dict.items():
             net_dict[key] = DotNetConverter.to_dotnet_value(value)

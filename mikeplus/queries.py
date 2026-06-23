@@ -348,11 +348,7 @@ class InsertQuery(BaseQuery[str]):
         non_ud_values = {k: v for k, v in values.items() if k not in ud_columns}
         ud_values = {k: v for k, v in values.items() if k in ud_columns}
 
-        net_values = (
-            DotNetConverter.to_dotnet_dictionary(non_ud_values)
-            if non_ud_values
-            else None
-        )
+        net_values = DotNetConverter.to_dotnet_dictionary(non_ud_values)
 
         _, inserted_muid = net_table.InsertByCommand(
             muid,
