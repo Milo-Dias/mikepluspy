@@ -16,6 +16,7 @@ from .m_GlobalParameter import m_GlobalParameterTable
 from .m_CustomUnit import m_CustomUnitTable
 from .m_CustomConfig import m_CustomConfigTable
 from .m_ChartBookmark import m_ChartBookmarkTable
+from .m_GenericSetting import m_GenericSettingTable
 from .ms_Tab import ms_TabTable
 from .ms_TabD import ms_TabDTable
 from .ms_2DTab import ms_2DTabTable
@@ -236,6 +237,7 @@ from .mw_AutocaliLeaks import mw_AutocaliLeaksTable
 from .mw_AutocaliTargets import mw_AutocaliTargetsTable
 from .mw_WDOAggSensors import mw_WDOAggSensorsTable
 from .mw_WDOAggSensorsD import mw_WDOAggSensorsDTable
+from .mw_WDOAmi import mw_WDOAmiTable
 from .mwRes_ValveCriticality import mwRes_ValveCriticalityTable
 from .mwRes_Sustainability_Node import mwRes_Sustainability_NodeTable
 from .mwRes_Sustainability_Link import mwRes_Sustainability_LinkTable
@@ -243,6 +245,7 @@ from .m21_pfsSection import m21_pfsSectionTable
 from .m21_pfsKeyword import m21_pfsKeywordTable
 from .m21_pfsParam import m21_pfsParamTable
 from .m2d_GlobalSetting import m2d_GlobalSettingTable
+from .m2d_BndGlobalSetting import m2d_BndGlobalSettingTable
 from .m2d_SurfaceRoughnessArea import m2d_SurfaceRoughnessAreaTable
 from .m2d_SurfaceRoughnessValue import m2d_SurfaceRoughnessValueTable
 from .m2d_EddyViscosityArea import m2d_EddyViscosityAreaTable
@@ -293,6 +296,7 @@ from .mss_Pump import mss_PumpTable
 from .mss_Outlet import mss_OutletTable
 from .mss_Street import mss_StreetTable
 from .mss_Inlet import mss_InletTable
+from .mss_InletConduitCon import mss_InletConduitConTable
 from .mss_Weir import mss_WeirTable
 from .mss_Tab import mss_TabTable
 from .mss_TabD import mss_TabDTable
@@ -351,6 +355,7 @@ class TableCollection(BaseTableCollection):
         tables['m_CustomUnit'] = m_CustomUnitTable(self._data_table_container.GetTable('m_CustomUnit'))
         tables['m_CustomConfig'] = m_CustomConfigTable(self._data_table_container.GetTable('m_CustomConfig'))
         tables['m_ChartBookmark'] = m_ChartBookmarkTable(self._data_table_container.GetTable('m_ChartBookmark'))
+        tables['m_GenericSetting'] = m_GenericSettingTable(self._data_table_container.GetTable('m_GenericSetting'))
         tables['ms_Tab'] = ms_TabTable(self._data_table_container.GetTable('ms_Tab'))
         tables['ms_TabD'] = ms_TabDTable(self._data_table_container.GetTable('ms_TabD'))
         tables['ms_2DTab'] = ms_2DTabTable(self._data_table_container.GetTable('ms_2DTab'))
@@ -571,6 +576,7 @@ class TableCollection(BaseTableCollection):
         tables['mw_AutocaliTargets'] = mw_AutocaliTargetsTable(self._data_table_container.GetTable('mw_AutocaliTargets'))
         tables['mw_WDOAggSensors'] = mw_WDOAggSensorsTable(self._data_table_container.GetTable('mw_WDOAggSensors'))
         tables['mw_WDOAggSensorsD'] = mw_WDOAggSensorsDTable(self._data_table_container.GetTable('mw_WDOAggSensorsD'))
+        tables['mw_WDOAmi'] = mw_WDOAmiTable(self._data_table_container.GetTable('mw_WDOAmi'))
         tables['mwRes_ValveCriticality'] = mwRes_ValveCriticalityTable(self._data_table_container.GetTable('mwRes_ValveCriticality'))
         tables['mwRes_Sustainability_Node'] = mwRes_Sustainability_NodeTable(self._data_table_container.GetTable('mwRes_Sustainability_Node'))
         tables['mwRes_Sustainability_Link'] = mwRes_Sustainability_LinkTable(self._data_table_container.GetTable('mwRes_Sustainability_Link'))
@@ -578,6 +584,7 @@ class TableCollection(BaseTableCollection):
         tables['m21_pfsKeyword'] = m21_pfsKeywordTable(self._data_table_container.GetTable('m21_pfsKeyword'))
         tables['m21_pfsParam'] = m21_pfsParamTable(self._data_table_container.GetTable('m21_pfsParam'))
         tables['m2d_GlobalSetting'] = m2d_GlobalSettingTable(self._data_table_container.GetTable('m2d_GlobalSetting'))
+        tables['m2d_BndGlobalSetting'] = m2d_BndGlobalSettingTable(self._data_table_container.GetTable('m2d_BndGlobalSetting'))
         tables['m2d_SurfaceRoughnessArea'] = m2d_SurfaceRoughnessAreaTable(self._data_table_container.GetTable('m2d_SurfaceRoughnessArea'))
         tables['m2d_SurfaceRoughnessValue'] = m2d_SurfaceRoughnessValueTable(self._data_table_container.GetTable('m2d_SurfaceRoughnessValue'))
         tables['m2d_EddyViscosityArea'] = m2d_EddyViscosityAreaTable(self._data_table_container.GetTable('m2d_EddyViscosityArea'))
@@ -628,6 +635,7 @@ class TableCollection(BaseTableCollection):
         tables['mss_Outlet'] = mss_OutletTable(self._data_table_container.GetTable('mss_Outlet'))
         tables['mss_Street'] = mss_StreetTable(self._data_table_container.GetTable('mss_Street'))
         tables['mss_Inlet'] = mss_InletTable(self._data_table_container.GetTable('mss_Inlet'))
+        tables['mss_InletConduitCon'] = mss_InletConduitConTable(self._data_table_container.GetTable('mss_InletConduitCon'))
         tables['mss_Weir'] = mss_WeirTable(self._data_table_container.GetTable('mss_Weir'))
         tables['mss_Tab'] = mss_TabTable(self._data_table_container.GetTable('mss_Tab'))
         tables['mss_TabD'] = mss_TabDTable(self._data_table_container.GetTable('mss_TabD'))
@@ -746,6 +754,11 @@ class TableCollection(BaseTableCollection):
     def m_ChartBookmark(self) -> m_ChartBookmarkTable:
         """Table 'm_ChartBookmark' (m_ChartBookmark)"""
         return self._tables['m_ChartBookmark']
+    
+    @property
+    def m_GenericSetting(self) -> m_GenericSettingTable:
+        """Table 'm_GenericSetting' (m_GenericSetting)"""
+        return self._tables['m_GenericSetting']
     
     @property
     def ms_Tab(self) -> ms_TabTable:
@@ -1848,6 +1861,11 @@ class TableCollection(BaseTableCollection):
         return self._tables['mw_WDOAggSensorsD']
     
     @property
+    def mw_WDOAmi(self) -> mw_WDOAmiTable:
+        """Table 'mw_WDOAmi' (Advanced metering infrastructure)"""
+        return self._tables['mw_WDOAmi']
+    
+    @property
     def mwRes_ValveCriticality(self) -> mwRes_ValveCriticalityTable:
         """Table 'mwRes_ValveCriticality' (Valve criticality)"""
         return self._tables['mwRes_ValveCriticality']
@@ -1881,6 +1899,11 @@ class TableCollection(BaseTableCollection):
     def m2d_GlobalSetting(self) -> m2d_GlobalSettingTable:
         """Table 'm2d_GlobalSetting' (m2d_GlobalSetting)"""
         return self._tables['m2d_GlobalSetting']
+    
+    @property
+    def m2d_BndGlobalSetting(self) -> m2d_BndGlobalSettingTable:
+        """Table 'm2d_BndGlobalSetting' (m2d_BndGlobalSetting)"""
+        return self._tables['m2d_BndGlobalSetting']
     
     @property
     def m2d_SurfaceRoughnessArea(self) -> m2d_SurfaceRoughnessAreaTable:
@@ -2131,6 +2154,11 @@ class TableCollection(BaseTableCollection):
     def mss_Inlet(self) -> mss_InletTable:
         """Table 'mss_Inlet' (Inlets)"""
         return self._tables['mss_Inlet']
+    
+    @property
+    def mss_InletConduitCon(self) -> mss_InletConduitConTable:
+        """Table 'mss_InletConduitCon' (Inlets Connections)"""
+        return self._tables['mss_InletConduitCon']
     
     @property
     def mss_Weir(self) -> mss_WeirTable:

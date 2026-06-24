@@ -5,6 +5,8 @@ class msm_RTCSensorTableColumns(BaseColumns):
     """Column names for msm_RTCSensor (Sensors)."""
     MUID = "MUID"
     """ID"""
+    Enabled = "Enabled"
+    """Apply"""
     Sqn = "Sqn"
     """Sqn"""
     TypeNo = "TypeNo"

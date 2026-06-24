@@ -2,6 +2,20 @@
 
 This is a space for documenting standard development and maintenance processes.
 
+## Compatibility principle: no breaking changes within a year line
+
+Within a MIKE+ year (all `2026.x.x` releases), avoid changes that break users
+regardless of which update (GA, U1, U2, …) of that year they have installed.
+Save genuine breaks for the next year bump.
+
+- Adding tables/columns is fine — they degrade gracefully against older
+  assemblies (`GetTable` returns `None`, `BaseTable.__init__` warns and
+  continues). Don't add code that hard-fails on a missing table/column. Avoid
+  removing or renaming mid-year.
+- For changed .NET signatures, support both forms (try new, fall back to old)
+  rather than swapping. See `SimulationRunner.__init__`. Tag fallbacks with
+  `TODO(<next year>)` for cleanup at the year bump.
+
 ## Release process for new MIKE+ versions
 
 When a new version of MIKE+ is released, the following needs to be done before releasing a corresponing Python vesrion:

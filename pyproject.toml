@@ -7,7 +7,7 @@ exclude = ["notebooks", "tests"]
 
 [project]
 name = "mikeplus"
-version = "2026.0.0"
+version = "2026.1.0"
 dependencies = [
     "numpy",
     "pythonnet>=3.0",
@@ -30,6 +30,7 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Scientific/Engineering",
 ]
 
