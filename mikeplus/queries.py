@@ -9,12 +9,13 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any, Generic, TypeVar, Union
+import pandas as pd
 
 if TYPE_CHECKING:
     from .tables import BaseTable
 
 
-from System.Data import ConnectionState
+from System.Data import ConnectionState, DbType
 
 from .dotnet import DotNetConverter
 from .utils import to_sql
@@ -119,6 +120,46 @@ class BaseQuery(Generic[QueryResultT], ABC):
         wrapped_conditions = [f"({condition})" for condition in self._conditions]
         where_clause = " AND ".join(wrapped_conditions)
         return where_clause
+
+    def _parse_datetime_strings(self, values: dict[str, Any]) -> dict[str, Any]:
+        """Parse strings assigned to schema-declared MIKE+ DateTime fields.
+
+        DateTime fields are identified from the MIKE+ table schema using
+        ``DbType.DateTime``. Field-name matching is case-insensitive. String
+        values assigned to those fields are parsed with ``pandas.to_datetime``;
+        all other fields and value types are left unchanged.
+
+        Parameters
+        ----------
+        values : dict[str, Any]
+            Mapping of MIKE+ field names to values intended for insertion or
+            update.
+
+        Returns
+        -------
+        dict[str, Any]
+            New dictionary containing parsed datetime values where applicable.
+            The input dictionary is not modified.
+
+        Notes
+        -----
+        Parsing errors raised by ``pandas.to_datetime`` are allowed to
+        propagate. Strings in non-DateTime fields are never interpreted as
+        dates.
+
+        """
+        datetime_fields = {
+            column.Field.casefold()
+            for column in self._table._net_table.Columns
+            if column.DbType == DbType.DateTime
+        }
+
+        return {
+            field: pd.to_datetime(value)
+            if isinstance(value, str) and field.casefold() in datetime_fields
+            else value
+            for field, value in values.items()
+        }
 
     def reset(self):
         """Reset the query execution status to allow re-execution.
@@ -318,18 +359,46 @@ class InsertQuery(BaseQuery[str]):
     def _execute_impl(self) -> str:
         """Implement the INSERT query execution.
 
+        Supplied field names are matched case-insensitively to their canonical
+        MIKE+ schema names. Strings assigned to schema-declared DateTime fields
+        are parsed before conversion to .NET values. If no MUID is supplied,
+        MIKE+ generates a unique one. Geometry and user-defined fields are
+        handled separately from ordinary fields.
+
         Returns
         -------
         str
-
             The MUID of the newly inserted row
 
+        Raises
+        ------
+        ValueError
+            If the requested MUID already exists in the active scenario.
 
+        Notes
+        -----
+        Conversion and MIKE+ SDK exceptions are allowed to propagate. This
+        method is called internally by ``BaseQuery.execute``.
 
         """
         net_table = self._table._net_table
 
         values = self._values.copy()
+
+        ud_columns = getattr(self._table, "_user_defined_columns", set()) or set()
+
+        canonical_names = {
+            name.casefold(): name
+            for name in [*self._table.columns, *ud_columns]
+        }
+        canonical_names.update({"muid": "MUID", "geometry": "geometry"})
+
+        values = {
+            canonical_names.get(name.casefold(), name): value
+            for name, value in values.items()
+        }
+
+        values = self._parse_datetime_strings(values)
 
         muid = values.pop("MUID", net_table.CreateUniqueMuid())
 
@@ -344,7 +413,6 @@ class InsertQuery(BaseQuery[str]):
             geometry = DotNetConverter.to_dotnet_geometry(geometry)
 
         # Split values into user-defined and non-user-defined
-        ud_columns = getattr(self._table, "_user_defined_columns", set()) or set()
         non_ud_values = {k: v for k, v in values.items() if k not in ud_columns}
         ud_values = {k: v for k, v in values.items() if k in ud_columns}
 
@@ -396,13 +464,27 @@ class UpdateQuery(BaseQuery[list[str]]):
     def _execute_impl(self) -> list[str]:
         """Implement the UPDATE query execution.
 
+        Schema-declared DateTime strings are parsed before conversion.
+        Ordinary fields are updated with ``SetValuesByCommand`` and geometry
+        is updated separately with ``UpdateGeomByCommand``. User-defined fields
+        are applied individually after those commands.
+
         Returns
         -------
         list of str
-
             List of MUIDs updated
 
+        Raises
+        ------
+        ValueError
+            If no filter is supplied and ``all()`` was not called explicitly.
+        RuntimeError
+            If a requested geometry update does not commit.
 
+        Notes
+        -----
+        Conversion and MIKE+ SDK exceptions are allowed to propagate. This
+        method is called internally by ``BaseQuery.execute``.
 
         """
         # Safety check: if no conditions and all() not called, prevent accidental updates
@@ -415,7 +497,13 @@ class UpdateQuery(BaseQuery[list[str]]):
 
         net_table = self._table._net_table
 
-        values = self._values.copy()
+        values = self._parse_datetime_strings(self._values.copy())
+
+        geometry_key = next(
+            (key for key in values if key.casefold() == "geometry"),
+            None,
+        )
+        geometry = values.pop(geometry_key) if geometry_key is not None else None
 
         # Split values into user-defined and non-user-defined
         ud_columns = getattr(self._table, "_user_defined_columns", set()) or set()
@@ -442,6 +530,18 @@ class UpdateQuery(BaseQuery[list[str]]):
         for muid in muids:
             if net_values_non_ud is not None:
                 net_table.SetValuesByCommand(muid, net_values_non_ud)
+
+            if geometry is not None:
+                result = net_table.UpdateGeomByCommand(
+                    muid,
+                    DotNetConverter.to_dotnet_geometry(geometry),
+                )
+
+                if not result.CmdCommitted:
+                    raise RuntimeError(
+                        result.Msg
+                        or f"Geometry update failed for {self._table.name}, MUID {muid}"
+                    )
 
             for col, val in ud_values.items():
                 net_table.SetValue(muid, col, DotNetConverter.to_dotnet_value(val))

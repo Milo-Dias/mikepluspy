@@ -11,8 +11,6 @@ import clr  # noqa: F401
 import datetime
 from typing import Any, Dict
 
-import pandas as pd
-
 import System
 from System import String, Object, Nullable
 from System.Collections.Generic import List, IList, IDictionary, Dictionary
@@ -56,6 +54,10 @@ class DotNetConverter:
     def to_dotnet_value(value: Any) -> Any:
         """Convert a Python value to its appropriate .NET equivalent for database operations.
 
+        Strings are returned unchanged. DateTime strings must be parsed by
+        the query layer (queries.py) using the destination field's MIKE+ schema type before
+        they reach this converter.
+
         Parameters
         ----------
         value : Any
@@ -64,7 +66,8 @@ class DotNetConverter:
         Returns
         -------
         Any
-            The converted .NET value
+            Converted .NET value, or the original value when no conversion is
+            required.
 
         """
         if value is None:
@@ -78,13 +81,7 @@ class DotNetConverter:
         elif isinstance(value, datetime.datetime):
             return DotNetConverter.to_dotnet_datetime(value)
         elif isinstance(value, str):
-            try:
-                value = pd.to_datetime(value)
-            except ValueError:
-                pass
-            if isinstance(value, datetime.datetime):
-                return DotNetConverter.to_dotnet_datetime(value)
-            return value  # Strings automatically convert
+            return value
         elif isinstance(value, list):
             return DotNetConverter.as_dotnet_list(value)
         # Add other type conversions as needed
