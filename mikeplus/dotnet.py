@@ -16,6 +16,8 @@ from System import String, Object, Nullable
 from System.Collections.Generic import List, IList, IDictionary, Dictionary
 from DHI.Amelia.Infrastructure.Interface.UtilityHelper import GeoAPIHelper
 
+from System.Data import DbType
+import pandas as pd
 
 def get_implementation(net_object: Any, raw: bool = False) -> Any:
     """Get the implementation of a .NET interface object.
@@ -51,17 +53,20 @@ class DotNetConverter:
     """
 
     @staticmethod
-    def to_dotnet_value(value: Any) -> Any:
-        """Convert a Python value to its appropriate .NET equivalent for database operations.
+    def to_dotnet_value(value: Any, db_type: DbType | None = None) -> Any:
+        """Convert a Python value to its appropriate .NET equivalent.
 
-        Strings are returned unchanged. DateTime strings must be parsed by
-        the query layer (queries.py) using the destination field's MIKE+ schema type before
-        they reach this converter.
+        String values are returned unchanged unless ``db_type`` is
+        ``DbType.DateTime``. Strings for DateTime fields are parsed and converted
+        to ``System.DateTime``.
 
         Parameters
         ----------
         value : Any
             The Python value to convert
+
+        db_type : DbType, optional
+            Destination database type. Used to identify DateTime fields.
 
         Returns
         -------
@@ -81,7 +86,11 @@ class DotNetConverter:
         elif isinstance(value, datetime.datetime):
             return DotNetConverter.to_dotnet_datetime(value)
         elif isinstance(value, str):
-            return value
+            if db_type != DbType.DateTime:
+                return value
+            value = pd.to_datetime(value).to_pydatetime()
+            return DotNetConverter.to_dotnet_datetime(value)
+
         elif isinstance(value, list):
             return DotNetConverter.as_dotnet_list(value)
         # Add other type conversions as needed
@@ -116,6 +125,7 @@ class DotNetConverter:
     @staticmethod
     def to_dotnet_dictionary(
         py_dict: Dict[str, Any],
+        column_types: Dict[str, DbType] | None = None
     ) -> Dictionary[String, Object]:
         """Convert a Python dictionary to a .NET Dictionary.
 
@@ -127,6 +137,9 @@ class DotNetConverter:
         py_dict : Dict[str, Any]
             Python dictionary to convert
 
+        column_types : Dict[str, DbType], optional
+            Casefold field names mapped to their destination database types.
+
         Returns
         -------
         Dictionary[String, Object]
@@ -134,12 +147,14 @@ class DotNetConverter:
 
         """
         net_dict = Dictionary[String, Object]()
+        column_types = column_types or {}
 
         if not py_dict:
             return net_dict
 
         for key, value in py_dict.items():
-            net_dict[key] = DotNetConverter.to_dotnet_value(value)
+            db_type = column_types.get(key.casefold())
+            net_dict[key] = DotNetConverter.to_dotnet_value(value, db_type)
 
         return net_dict
 

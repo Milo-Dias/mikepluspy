@@ -9,13 +9,11 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any, Generic, TypeVar, Union
-import pandas as pd
 
 if TYPE_CHECKING:
     from .tables import BaseTable
 
-
-from System.Data import ConnectionState, DbType
+from System.Data import ConnectionState
 
 from .dotnet import DotNetConverter
 from .utils import to_sql
@@ -120,46 +118,6 @@ class BaseQuery(Generic[QueryResultT], ABC):
         wrapped_conditions = [f"({condition})" for condition in self._conditions]
         where_clause = " AND ".join(wrapped_conditions)
         return where_clause
-
-    def _parse_datetime_strings(self, values: dict[str, Any]) -> dict[str, Any]:
-        """Parse strings assigned to schema-declared MIKE+ DateTime fields.
-
-        DateTime fields are identified from the MIKE+ table schema using
-        ``DbType.DateTime``. Field-name matching is case-insensitive. String
-        values assigned to those fields are parsed with ``pandas.to_datetime``;
-        all other fields and value types are left unchanged.
-
-        Parameters
-        ----------
-        values : dict[str, Any]
-            Mapping of MIKE+ field names to values intended for insertion or
-            update.
-
-        Returns
-        -------
-        dict[str, Any]
-            New dictionary containing parsed datetime values where applicable.
-            The input dictionary is not modified.
-
-        Notes
-        -----
-        Parsing errors raised by ``pandas.to_datetime`` are allowed to
-        propagate. Strings in non-DateTime fields are never interpreted as
-        dates.
-
-        """
-        datetime_fields = {
-            column.Field.casefold()
-            for column in self._table._net_table.Columns
-            if column.DbType == DbType.DateTime
-        }
-
-        return {
-            field: pd.to_datetime(value)
-            if isinstance(value, str) and field.casefold() in datetime_fields
-            else value
-            for field, value in values.items()
-        }
 
     def reset(self):
         """Reset the query execution status to allow re-execution.
@@ -398,7 +356,10 @@ class InsertQuery(BaseQuery[str]):
             for name, value in values.items()
         }
 
-        values = self._parse_datetime_strings(values)
+        column_types = {
+            column.Field.casefold(): column.DbType
+            for column in net_table.Columns
+        }
 
         muid = values.pop("MUID", net_table.CreateUniqueMuid())
 
@@ -416,7 +377,7 @@ class InsertQuery(BaseQuery[str]):
         non_ud_values = {k: v for k, v in values.items() if k not in ud_columns}
         ud_values = {k: v for k, v in values.items() if k in ud_columns}
 
-        net_values = DotNetConverter.to_dotnet_dictionary(non_ud_values)
+        net_values = DotNetConverter.to_dotnet_dictionary(non_ud_values, column_types)
 
         _, inserted_muid = net_table.InsertByCommand(
             muid,
@@ -426,7 +387,14 @@ class InsertQuery(BaseQuery[str]):
 
         # Set user-defined values after insert (not by command)
         for col, val in ud_values.items():
-            net_table.SetValue(inserted_muid, col, DotNetConverter.to_dotnet_value(val))
+            net_table.SetValue(
+                inserted_muid,
+                col,
+                DotNetConverter.to_dotnet_value(
+                    val,
+                    column_types.get(col.casefold()),
+                ),
+            )
 
         return inserted_muid
 
@@ -497,7 +465,12 @@ class UpdateQuery(BaseQuery[list[str]]):
 
         net_table = self._table._net_table
 
-        values = self._parse_datetime_strings(self._values.copy())
+        column_types = {
+            column.Field.casefold(): column.DbType
+            for column in net_table.Columns
+        }
+
+        values = self._values.copy()
 
         geometry_key = next(
             (key for key in values if key.casefold() == "geometry"),
@@ -511,7 +484,7 @@ class UpdateQuery(BaseQuery[list[str]]):
         ud_values = {k: v for k, v in values.items() if k in ud_columns}
 
         net_values_non_ud = (
-            DotNetConverter.to_dotnet_dictionary(non_ud_values)
+            DotNetConverter.to_dotnet_dictionary(non_ud_values, column_types)
             if non_ud_values
             else None
         )
@@ -544,7 +517,14 @@ class UpdateQuery(BaseQuery[list[str]]):
                     )
 
             for col, val in ud_values.items():
-                net_table.SetValue(muid, col, DotNetConverter.to_dotnet_value(val))
+                net_table.SetValue(
+                    muid,
+                    col,
+                    DotNetConverter.to_dotnet_value(
+                        val,
+                        column_types.get(col.casefold()),
+                    ),
+                )
             updated_muids.append(muid)
 
         return updated_muids
