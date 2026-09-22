@@ -94,6 +94,8 @@ class TestBaseQuery:
         else:
             with pytest.raises(expected_conditions):
                 base_query.by_muid(muid)
+
+
 class TestSelectQuery:
     """Tests for the SelectQuery class."""
 
@@ -294,6 +296,31 @@ class TestSelectQuery:
         assert "MUID" in df.columns
         assert len(df) == 8
         assert "Link_2" in df.index
+
+
+    @pytest.mark.parametrize(
+        "columns",
+        [
+            ["muid", "diameter"],
+            ["MuId", "DIAMETER"],
+        ],
+    )
+    def test_select_accepts_case_insensitive_columns(self, table, columns):
+        """Resolve selected columns before sending them to MIKE+."""
+        query = SelectQuery(table, columns).by_muid("Link_2")
+
+        result = query.execute()
+
+        assert query._columns == ["MUID", "Diameter"]
+        assert result["Link_2"] == ["Link_2", 1.0]
+
+
+    @pytest.mark.parametrize("column", ["muid", "MuId"])
+    def test_order_by_resolves_canonical_column_name(self, table, column):
+        """Resolve the ordering field to canonical MIKE+ casing."""
+        query = SelectQuery(table, ["MUID"]).order_by(column)
+
+        assert query._order_by == ("MUID", False)
 
 
 class TestInsertQuery:
@@ -610,6 +637,7 @@ class TestUpdateQuery:
         table = SimpleNamespace(
             _net_table=net_table,
             _user_defined_columns=set(),
+            columns=["MUID"],
             get_muids=lambda: ["Link_2"],
             name="msm_Link",
         )
@@ -641,6 +669,7 @@ class TestUpdateQuery:
         table = SimpleNamespace(
             _net_table=net_table,
             _user_defined_columns=set(),
+            columns=["MUID"],
             get_muids=lambda: ["Link_2"],
             name="msm_Link",
         )
@@ -657,6 +686,38 @@ class TestUpdateQuery:
 
         with pytest.raises(RuntimeError, match="Geometry command rejected"):
             query._execute_impl()
+
+    def test_update_sends_canonical_field_names_to_command(self):
+        """Send canonical field names across the MIKE+ command boundary."""
+        captured = {}
+
+        def set_values_by_command(muid, values):
+            captured["muid"] = muid
+            captured["fields"] = set(values.Keys)
+
+        net_table = SimpleNamespace(
+            Columns=[],
+            SetValuesByCommand=set_values_by_command,
+        )
+        table = SimpleNamespace(
+            _net_table=net_table,
+            _user_defined_columns=set(),
+            columns=["MUID", "Diameter", "Description"],
+            get_muids=lambda: ["Link_2"],
+            name="msm_Link",
+        )
+
+        updated = (
+            UpdateQuery(table, {"diameter": 1.2})
+            .all()
+            ._execute_impl()
+        )
+
+        assert updated == ["Link_2"]
+        assert captured == {
+            "muid": "Link_2",
+            "fields": {"Diameter"},
+        }
 
 
 class TestDeleteQuery:

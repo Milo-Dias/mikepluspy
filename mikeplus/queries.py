@@ -119,6 +119,41 @@ class BaseQuery(Generic[QueryResultT], ABC):
         where_clause = " AND ".join(wrapped_conditions)
         return where_clause
 
+    def _canonicalize_field_names(
+        self,
+        values: dict[str, Any],
+    ) -> dict[str, Any]:
+        """Resolve field names to canonical MIKE+ casing.
+
+        Parameters
+        ----------
+        values : dict[str, Any]
+            Field-value pairs whose field names may use any casing.
+
+        Returns
+        -------
+        dict[str, Any]
+            Field-value pairs with recognized names replaced by their canonical
+            MIKE+ names. Unknown names are left unchanged.
+
+        """
+        ud_columns = getattr(self._table, "_user_defined_columns", set()) or set()
+
+        canonical_names = {
+            name.casefold(): name for name in [*self._table.columns, *ud_columns]
+        }
+        canonical_names.update(
+            {
+                "muid": "MUID",
+                "geometry": "geometry",
+            }
+        )
+
+        return {
+            canonical_names.get(name.casefold(), name): value
+            for name, value in values.items()
+        }
+
     def reset(self):
         """Reset the query execution status to allow re-execution.
 
@@ -206,7 +241,7 @@ class SelectQuery(BaseQuery[Union[dict[str, dict[str, Any]], None]]):
         self._validate_columns()
 
     def _validate_columns(self):
-        """Validate the columns specified in the query."""
+        """Validate selected columns and resolve them to canonical MIKE+ casing."""
         self._columns = list(self._columns)
         if not self._columns:
             self._columns = list(self._table.columns)
@@ -217,13 +252,15 @@ class SelectQuery(BaseQuery[Union[dict[str, dict[str, Any]], None]]):
             if invalid_columns:
                 raise ValueError(f"Invalid columns: {invalid_columns}")
 
+        self._columns = [self._table.columns[column] for column in self._columns]
+
     def order_by(self, column: str, descending: bool = False):
         """Add an ORDER BY clause to the query.
 
         Parameters
         ----------
         column : str
-            Column name to order by
+            Column name in any casing
         descending : bool, optional
             Whether to sort in descending order
 
@@ -232,8 +269,16 @@ class SelectQuery(BaseQuery[Union[dict[str, dict[str, Any]], None]]):
         self
             For method chaining
 
+        Raises
+        ------
+        KeyError
+            If no column matches ``column``.
+
         """
-        self._order_by = (column, descending)
+        self._order_by = (
+            self._table.columns[column],
+            descending,
+        )
         return self
 
     def _execute_impl(self) -> dict[str, dict[str, Any]] | None:
@@ -341,24 +386,12 @@ class InsertQuery(BaseQuery[str]):
         """
         net_table = self._table._net_table
 
-        values = self._values.copy()
+        values = self._canonicalize_field_names(self._values)
 
         ud_columns = getattr(self._table, "_user_defined_columns", set()) or set()
 
-        canonical_names = {
-            name.casefold(): name
-            for name in [*self._table.columns, *ud_columns]
-        }
-        canonical_names.update({"muid": "MUID", "geometry": "geometry"})
-
-        values = {
-            canonical_names.get(name.casefold(), name): value
-            for name, value in values.items()
-        }
-
         column_types = {
-            column.Field.casefold(): column.DbType
-            for column in net_table.Columns
+            column.Field.casefold(): column.DbType for column in net_table.Columns
         }
 
         muid = values.pop("MUID", net_table.CreateUniqueMuid())
@@ -432,10 +465,11 @@ class UpdateQuery(BaseQuery[list[str]]):
     def _execute_impl(self) -> list[str]:
         """Implement the UPDATE query execution.
 
-        Schema-declared DateTime strings are parsed before conversion.
-        Ordinary fields are updated with ``SetValuesByCommand`` and geometry
-        is updated separately with ``UpdateGeomByCommand``. User-defined fields
-        are applied individually after those commands.
+        Supplied field names are matched case-insensitively to their canonical
+        MIKE+ schema names. Schema-declared DateTime strings are parsed before
+        conversion. Ordinary fields are updated with ``SetValuesByCommand`` and
+        geometry is updated separately with ``UpdateGeomByCommand``. User-defined
+        fields are applied individually after those commands.
 
         Returns
         -------
@@ -466,11 +500,10 @@ class UpdateQuery(BaseQuery[list[str]]):
         net_table = self._table._net_table
 
         column_types = {
-            column.Field.casefold(): column.DbType
-            for column in net_table.Columns
+            column.Field.casefold(): column.DbType for column in net_table.Columns
         }
 
-        values = self._values.copy()
+        values = self._canonicalize_field_names(self._values)
 
         geometry_key = next(
             (key for key in values if key.casefold() == "geometry"),
